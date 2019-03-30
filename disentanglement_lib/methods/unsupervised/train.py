@@ -23,6 +23,7 @@ from disentanglement_lib.data.ground_truth import named_data
 from disentanglement_lib.data.ground_truth import util
 from disentanglement_lib.methods.unsupervised import gaussian_encoder_model
 from disentanglement_lib.methods.unsupervised import vae  # pylint: disable=unused-import
+from disentanglement_lib.methods.unsupervised import balanced_vae  # pylint: disable=unused-import
 from disentanglement_lib.utils import results
 import numpy as np
 import tensorflow as tf
