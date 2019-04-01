@@ -21,10 +21,12 @@ from __future__ import print_function
 from disentanglement_lib.config.tests import sweep as tests
 from disentanglement_lib.config.unsupervised_study_v1 import sweep as unsupervised_study_v1
 from disentanglement_lib.config.balanced_vae_study_v1 import sweep as balanced_vae_study_v1
+from disentanglement_lib.config.augmented_variance_vae_study_v1 import sweep as augmented_variance_vae_study_v1
 
 
 STUDIES = {
     "unsupervised_study_v1": unsupervised_study_v1.UnsupervisedStudyV1(),
     "balanced_vae_study_v1": balanced_vae_study_v1.BalancedVAEStudyV1(),
+    "augmented_variance_vae_study_v1": augmented_variance_vae_study_v1.AugmentedVarianceVAEStudyV1(),
     "test": tests.TestStudy(),
 }

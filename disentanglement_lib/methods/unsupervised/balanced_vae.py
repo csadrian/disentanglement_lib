@@ -135,3 +135,36 @@ class BalancedBetaVAE(BalancedBaseVAE):
   def regularizer(self, size_loss, variance_loss, z_mean, z_logvar, z_sampled):
     del z_mean, z_logvar, z_sampled
     return self.beta_size * size_loss + self.beta_variance * variance_loss
+
+
+@gin.configurable("augmented_variance_vae")
+class AugmentedVarianceVAE(BalancedBaseVAE):
+  """VAE model with augmented variance loss."""
+
+  def __init__(self, mean_var_weight=gin.REQUIRED, variance_weight=gin.REQUIRED):
+    """Creates a VAE model with a regularizer where the variance of means is incorporated.
+
+    Args:
+      mean_var_weight: Weight for the variance of means component.
+      variance_weight: Weight for the variance component.
+
+    Returns:
+      model_fn: Model function for TPUEstimator.
+    """
+    self.mean_var_weight = mean_var_weight
+    self.variance_weight = variance_weight
+
+  def regularizer(self, size_loss, variance_loss, z_mean, z_logvar, z_sampled):
+        variance = tf.exp(z_logvar)
+
+        m = tf.reduce_mean(z_mean, axis=0, keepdims=True)
+        devs_squared = tf.square(z_mean - m)
+        mean_variance = tf.reduce_mean(devs_squared, axis=0, keepdims=False)
+
+        total_variance = self.variance_weight * variance + self.mean_var_weight * mean_variance
+        loss = 0.5 * tf.reduce_sum(-1 - tf.log(total_variance) + total_variance, [1])
+        return tf.reduce_mean(loss, name="augmented_variance_loss")
+
+
+
+
