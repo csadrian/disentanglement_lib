@@ -63,13 +63,15 @@ class BalancedBaseVAE(gaussian_encoder_model.GaussianEncoderModel):
       train_op = tf.group([train_op, update_ops])
       tf.summary.scalar("reconstruction_loss", reconstruction_loss)
       tf.summary.scalar("elbo", -elbo)
-
+      tf.summary.scalar("regularizer_loss", regularizer)
+      
       logging_hook = tf.train.LoggingTensorHook({
           "loss": loss,
           "reconstruction_loss": reconstruction_loss,
           "elbo": -elbo,
           "size_loss": size_loss,
-          "variance_loss": variance_loss
+          "variance_loss": variance_loss,
+          "regularizer_loss": regularizer
       },
                                                 every_n_iter=100)
       return tf.contrib.tpu.TPUEstimatorSpec(
@@ -82,8 +84,8 @@ class BalancedBaseVAE(gaussian_encoder_model.GaussianEncoderModel):
           mode=mode,
           loss=loss,
           eval_metrics=(make_metric_fn("reconstruction_loss", "elbo",
-                                       "regularizer", "kl_loss" ,"size_loss", "variance_loss"),
-                        [reconstruction_loss, -elbo, regularizer, kl_loss, size_loss, variance_loss]))
+                                       "regularizer", "kl_loss" ,"size_loss", "variance_loss", "regularizer_loss"),
+                        [reconstruction_loss, -elbo, regularizer, kl_loss, size_loss, variance_loss, regularizer_loss]))
     else:
       raise NotImplementedError("Eval mode not supported.")
 
