@@ -85,7 +85,7 @@ class BalancedBaseVAE(gaussian_encoder_model.GaussianEncoderModel):
           loss=loss,
           eval_metrics=(make_metric_fn("reconstruction_loss", "elbo",
                                        "regularizer", "kl_loss" ,"size_loss", "variance_loss", "regularizer_loss"),
-                        [reconstruction_loss, -elbo, regularizer, kl_loss, size_loss, variance_loss, regularizer_loss]))
+                        [reconstruction_loss, -elbo, regularizer, kl_loss, size_loss, variance_loss, regularizer]))
     else:
       raise NotImplementedError("Eval mode not supported.")
 
