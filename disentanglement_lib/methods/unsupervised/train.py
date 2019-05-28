@@ -64,7 +64,9 @@ def train(model_dir,
           batch_size=gin.REQUIRED,
           eval_steps=1000,
           name="",
-          model_num=None):
+          model_num=None,
+          load_model=False,
+          module_export_name="tfhub"):
   """Trains the estimator and exports the snapshot and the gin config.
 
   The use of this function requires the gin binding 'dataset.name' to be
@@ -91,7 +93,8 @@ def train(model_dir,
     if overwrite:
       tf.gfile.DeleteRecursively(model_dir)
     else:
-      raise ValueError("Directory already exists and overwrite is False.")
+      if not load_model:
+        raise ValueError("Directory already exists and overwrite is False.")
 
   # Create a numpy random state. We will sample the random seeds for training
   # and evaluation from this.
@@ -125,7 +128,7 @@ def train(model_dir,
 
   # Save model as a TFHub module.
   output_shape = named_data.get_named_ground_truth_data().observation_shape
-  module_export_path = os.path.join(model_dir, "tfhub")
+  module_export_path = os.path.join(model_dir, module_export_name)
   gaussian_encoder_model.export_as_tf_hub(model, output_shape,
                                           tpu_estimator.latest_checkpoint(),
                                           module_export_path)

@@ -35,9 +35,15 @@ import gin.tf
 class BaseVAE(gaussian_encoder_model.GaussianEncoderModel):
   """Abstract base class of a basic Gaussian encoder model."""
 
+  def aux_loss(self, z_mean, z_sampled, labels):
+    return tf.constant(0.0)
+
   def model_fn(self, features, labels, mode, params):
     """TPUEstimator compatible model function."""
-    del labels
+    labels, features = features, labels
+    print("labelsxy: ", labels[0])
+    print("featuresxy: ", features)
+    #del labels
     is_training = (mode == tf.estimator.ModeKeys.TRAIN)
     data_shape = features.get_shape().as_list()[1:]
     z_mean, z_logvar = self.gaussian_encoder(features, is_training=is_training)
@@ -47,7 +53,10 @@ class BaseVAE(gaussian_encoder_model.GaussianEncoderModel):
     reconstruction_loss = tf.reduce_mean(per_sample_loss)
     kl_loss = compute_gaussian_kl(z_mean, z_logvar)
     regularizer = self.regularizer(kl_loss, z_mean, z_logvar, z_sampled)
-    loss = tf.add(reconstruction_loss, regularizer, name="loss")
+
+    aux_loss = self.aux_loss(z_mean, z_sampled, labels)
+
+    loss = tf.add_n([reconstruction_loss, regularizer, aux_loss], name="loss")
     elbo = tf.add(reconstruction_loss, kl_loss, name="elbo")
     if mode == tf.estimator.ModeKeys.TRAIN:
       optimizer = optimizers.make_vae_optimizer()
@@ -57,11 +66,13 @@ class BaseVAE(gaussian_encoder_model.GaussianEncoderModel):
       train_op = tf.group([train_op, update_ops])
       tf.summary.scalar("reconstruction_loss", reconstruction_loss)
       tf.summary.scalar("elbo", -elbo)
+      tf.summary.scalar("aux_loss", aux_loss)
 
       logging_hook = tf.train.LoggingTensorHook({
           "loss": loss,
           "reconstruction_loss": reconstruction_loss,
-          "elbo": -elbo
+          "elbo": -elbo,
+          "aux_loss": aux_loss
       },
                                                 every_n_iter=100)
       return tf.contrib.tpu.TPUEstimatorSpec(
@@ -153,6 +164,43 @@ class BetaVAE(BaseVAE):
   def regularizer(self, kl_loss, z_mean, z_logvar, z_sampled):
     del z_mean, z_logvar, z_sampled
     return self.beta * kl_loss
+
+
+@gin.configurable("supervised_vae")
+class SupervisedBetaVAE(BaseVAE):
+  """BetaVAE model."""
+
+  def __init__(self, beta=gin.REQUIRED, omega=gin.REQUIRED):
+    """Creates a beta-VAE model.
+
+    Implementing Eq. 4 of "beta-VAE: Learning Basic Visual Concepts with a
+    Constrained Variational Framework"
+    (https://openreview.net/forum?id=Sy2fzU9gl).
+
+    Args:
+      beta: Hyperparameter for the regularizer.
+
+    Returns:
+      model_fn: Model function for TPUEstimator.
+    """
+    self.beta = beta
+    self.omega = omega
+
+  def regularizer(self, kl_loss, z_mean, z_logvar, z_sampled):
+    del z_mean, z_logvar, z_sampled
+    return self.beta * kl_loss
+
+  def aux_loss(self, z_mean, z_sampled, labels):
+    loss_factor1 = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=tf.layers.dense(z_mean, 3), labels=labels[:,0])
+    loss_factor2 = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=tf.layers.dense(z_mean, 6), labels=labels[:,1])
+    loss_factor3 = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=tf.layers.dense(z_mean, 40), labels=labels[:,2])
+    loss_factor4 = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=tf.layers.dense(z_mean, 32), labels=labels[:,3])
+    loss_factor5 = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=tf.layers.dense(z_mean, 32), labels=labels[:,4])
+
+    loss_factor = loss_factor1 + loss_factor2 + loss_factor3 + loss_factor4 + loss_factor5 
+
+    supervised_factor_loss = self.omega * tf.reduce_mean(loss_factor)
+    return supervised_factor_loss
 
 
 def anneal(c_max, step, iteration_threshold):

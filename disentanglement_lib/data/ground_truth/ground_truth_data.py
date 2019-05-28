@@ -49,4 +49,5 @@ class GroundTruthData(object):
 
   def sample_observations(self, num, random_state):
     """Sample a batch of observations X."""
-    return self.sample(num, random_state)[1]
+    #return self.sample(num, random_state)[1]
+    return self.sample(num, random_state)

@@ -26,6 +26,11 @@ import numpy as np
 from scipy import stats
 from six.moves import range
 import tensorflow as tf
+
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True
+sess = tf.Session(config=config)
+
 from tensorflow import gfile
 import tensorflow_hub as hub
 import gin.tf
@@ -82,7 +87,7 @@ def visualize(model_dir,
 
   with hub.eval_function_for_module(module_path) as f:
     # Save reconstructions.
-    real_pics = dataset.sample_observations(num_pics, random_state)
+    real_pics = dataset.sample_observations(num_pics, random_state)[1]
     raw_pics = f(
         dict(images=real_pics), signature="reconstructions",
         as_dict=True)["images"]
@@ -114,7 +119,7 @@ def visualize(model_dir,
 
     # Save latent traversals.
     result = f(
-        dict(images=dataset.sample_observations(num_pics, random_state)),
+        dict(images=dataset.sample_observations(num_pics, random_state)[1]),
         signature="gaussian_encoder",
         as_dict=True)
     means = result["mean"]

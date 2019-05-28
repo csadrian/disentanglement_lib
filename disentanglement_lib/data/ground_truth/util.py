@@ -29,10 +29,11 @@ def tf_data_set_from_ground_truth_data(ground_truth_data, random_seed):
     # We need to hard code the random seed so that the data set can be reset.
     random_state = np.random.RandomState(random_seed)
     while True:
-      yield ground_truth_data.sample_observations(1, random_state)[0]
+      labels, features = ground_truth_data.sample_observations(1, random_state)
+      yield labels[0], features[0]
 
   return tf.data.Dataset.from_generator(
-      generator, tf.float32, output_shapes=ground_truth_data.observation_shape)
+      generator, (tf.int32, tf.float32), output_shapes=((5,) ,ground_truth_data.observation_shape))
 
 
 class SplitDiscreteStateSpace(object):

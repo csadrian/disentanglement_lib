@@ -17,12 +17,14 @@ dataset.name = "dsprites_full"
 model.batch_size = 64
 model.model = @vae()
 model.random_seed = 0
-vae.beta = 4
+vae.beta = 1
 encoder.num_latent = 10
 vae_optimizer.optimizer_fn = @AdamOptimizer
 # We train for only 5 steps, in practice we train for 300000 steps.
-model.training_steps = 5
+model.training_steps = 50000
 model.random_seed=0
+model.load_model = True
+model.module_export_name = "tfhub.finetuned"
 AdamOptimizer.beta1 = 0.9
 AdamOptimizer.beta2 = 0.999
 AdamOptimizer.epsilon = 1e-08
