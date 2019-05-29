@@ -1,6 +1,6 @@
 
 for i in {32..48}
 do
-  CUDA_VISIBLE_DEVICES=2 dlib_reproduce --study=supervised_vae_study_v1 --model_num=${i} > output/${i}.cout 2> output/${i}.cerr
+  CUDA_VISIBLE_DEVICES=2 python ./bin/dlib_reproduce --study=supervised_vae_study_v1 --model_num=${i} > output/${i}.cout 2> output/${i}.cerr
 done
 
