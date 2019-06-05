@@ -22,7 +22,7 @@ from absl import logging
 import pandas as pd
 import simplejson as json
 from tensorflow import gfile
-
+from glob import glob
 
 def aggregate_results_to_json(result_file_pattern, output_path):
   """Aggregates all the results files in the pattern into a single JSON file.
@@ -54,14 +54,17 @@ def load_aggregated_json_results(source_path):
 
 
 def _load(path):
-  with gfile.GFile(path) as f:
+  with open(path) as f:
+    print(path)
     result = json.load(f)
   result["path"] = path
   return result
 
 
 def _get(pattern):
-  files = gfile.Glob(pattern)
+  #files = gfile.Glob(pattern)
+  files = glob(pattern)
+  print(files)
   pool = multiprocessing.Pool()
   all_results = pool.map(_load, files)
   return pd.DataFrame(all_results)

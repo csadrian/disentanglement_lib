@@ -191,11 +191,12 @@ class SupervisedBetaVAE(BaseVAE):
     return self.beta * kl_loss
 
   def aux_loss(self, z_mean, z_sampled, labels):
-    loss_factor1 = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=tf.layers.dense(z_mean, 3), labels=labels[:,0])
-    loss_factor2 = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=tf.layers.dense(z_mean, 6), labels=labels[:,1])
-    loss_factor3 = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=tf.layers.dense(z_mean, 40), labels=labels[:,2])
-    loss_factor4 = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=tf.layers.dense(z_mean, 32), labels=labels[:,3])
-    loss_factor5 = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=tf.layers.dense(z_mean, 32), labels=labels[:,4])
+    #z_mean = tf.nn.relu(tf.layers.dense(z_mean, 256))
+    loss_factor1 = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=tf.layers.dense(z_mean[:, :2], 3), labels=labels[:,0])
+    loss_factor2 = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=tf.layers.dense(z_mean[:, 2:4], 6), labels=labels[:,1])
+    loss_factor3 = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=tf.layers.dense(z_mean[:, 4:6], 40), labels=labels[:,2])
+    loss_factor4 = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=tf.layers.dense(z_mean[:, 6:8], 32), labels=labels[:,3])
+    loss_factor5 = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=tf.layers.dense(z_mean[:, 8:10], 32), labels=labels[:,4])
 
     loss_factor = loss_factor1 + loss_factor2 + loss_factor3 + loss_factor4 + loss_factor5 
 
